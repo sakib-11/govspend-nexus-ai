@@ -1,0 +1,35 @@
+# Auto-detect text files
+* text=auto
+
+# Python
+*.py text diff=python
+*.pyi text diff=python
+*.pyx text diff=python
+*.pxd text diff=python
+*.pxi text diff=python
+
+# Markdown
+*.md text diff=markdown
+*.rst text diff=rst
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# Windows scripts
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Config files
+*.yaml text
+*.yml text
+*.json text
+*.toml text
+*.ini text
+*.conf text
+
+# Lock files
+poetry.lock binary
+package-lock.json binary
+yarn.lock binary
