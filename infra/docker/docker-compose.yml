@@ -1,0 +1,100 @@
+services:
+  # ---------- Databases ----------
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: govspend-postgres
+    environment:
+      POSTGRES_USER: govspend
+      POSTGRES_PASSWORD: govspend123
+      POSTGRES_DB: govspend
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U govspend"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - govspend-network
+    restart: unless-stopped
+
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: govspend-postgres-test
+    environment:
+      POSTGRES_USER: govspend
+      POSTGRES_PASSWORD: govspend123
+      POSTGRES_DB: govspend_test
+    ports:
+      - "5433:5432"
+    networks:
+      - govspend-network
+    restart: unless-stopped
+
+  # ---------- Caches ----------
+  redis:
+    image: redis:7-alpine
+    container_name: govspend-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - govspend-network
+    restart: unless-stopped
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: govspend-redis-test
+    ports:
+      - "6380:6379"
+    networks:
+      - govspend-network
+    restart: unless-stopped
+
+  # ---------- Management Tools ----------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: govspend-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@govspend.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - govspend-network
+    restart: unless-stopped
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: govspend-redis-insight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    networks:
+      - govspend-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  govspend-network:
+    driver: bridge
+    name: govspend-network

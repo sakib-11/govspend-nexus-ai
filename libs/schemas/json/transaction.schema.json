@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/transaction.json",
+  "title": "Canonical Transaction",
+  "description": "Normalized transaction from L0 ingestion",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique transaction identifier"
+    },
+    "invoice_doc_hash": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-fA-F0-9]{64}$",
+      "description": "SHA-256 hash of the invoice document"
+    },
+    "vendor_token": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z0-9]{10}$",
+      "description": "HMAC-tokenized vendor identifier"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Department identifier"
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMinimum": 0,
+      "description": "Transaction amount in INR"
+    },
+    "unit_price": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Price per unit"
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Quantity of items"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product/service category"
+    },
+    "region": {
+      "type": "string",
+      "description": "Geographic region"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Transaction submission timestamp"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Approval timestamp"
+    },
+    "approver_token": {
+      "type": "string",
+      "description": "Tokenized approver identifier"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["CPPP", "GeM", "ERP", "Manual"],
+      "description": "Data source"
+    }
+  },
+  "required": ["invoice_doc_hash", "vendor_token", "department_id", "amount", "unit_price", "quantity", "category", "region", "submitted_at", "source"],
+  "additionalProperties": false
+}

@@ -1,0 +1,228 @@
+# Default values for GovSpend Nexus AI Helm chart
+
+global:
+  environment: production
+  registry: ghcr.io
+  imagePullSecrets: []
+  storageClass: standard
+
+postgres:
+  enabled: true
+  image: postgres:15-alpine
+  replicas: 1
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  storage:
+    size: 50Gi
+  database: govspend
+  username: govspend
+  password: govspend123
+
+redis:
+  enabled: true
+  image: redis:7-alpine
+  replicas: 1
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  storage:
+    size: 10Gi
+  maxmemory: "512mb"
+  maxmemoryPolicy: allkeys-lru
+
+ingestion:
+  enabled: true
+  image: ingestion-svc
+  tag: latest
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  service:
+    port: 8001
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  env:
+    ENVIRONMENT: production
+    LOG_LEVEL: INFO
+
+detection:
+  enabled: true
+  image: detection-core
+  tag: latest
+  replicas: 3
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  service:
+    port: 8002
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+
+scoring:
+  enabled: true
+  image: scoring-svc
+  tag: latest
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "150m"
+    limits:
+      memory: "512Mi"
+      cpu: "300m"
+  service:
+    port: 8003
+
+gateway:
+  enabled: true
+  image: mcp-gateway
+  tag: latest
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+  service:
+    port: 8004
+
+explanation:
+  enabled: true
+  image: explanation-svc
+  tag: latest
+  replicas: 1
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  service:
+    port: 8005
+  openai:
+    apiKey: ""
+    model: gpt-4o-mini
+
+ledger:
+  enabled: true
+  image: ledger-svc
+  tag: latest
+  replicas: 1
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  service:
+    port: 8007
+  networkPolicy:
+    enabled: true
+    allowedNamespaces:
+      - govspend-unmask
+
+unmask:
+  enabled: true
+  image: unmask-svc
+  tag: latest
+  replicas: 1
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+  service:
+    port: 8008
+
+audit:
+  enabled: true
+  image: audit-log-svc
+  tag: latest
+  replicas: 1
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+  service:
+    port: 8009
+
+frontend:
+  enabled: true
+  image: frontend
+  tag: latest
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+  service:
+    port: 80
+  ingress:
+    enabled: true
+    host: govspend.auditcore.gov
+    tls:
+      enabled: true
+      secretName: govspend-tls
+
+monitoring:
+  enabled: false
+  prometheus:
+    enabled: true
+    port: 9090
+  grafana:
+    enabled: true
+    port: 3000
+
+logging:
+  enabled: true
+  elasticsearch:
+    enabled: true
+    version: 7.17.0
+  kibana:
+    enabled: true
+    port: 5601
+
+security:
+  rbac:
+    enabled: true
+  mfa:
+    enabled: true
+  auditLogging:
+    enabled: true
+    retentionDays: 365

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/mcp_tool.json",
+  "title": "MCP Tool Contract",
+  "description": "Tool definition for MCP Gateway",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Tool name"
+    },
+    "permission_tag": {
+      "type": "string",
+      "enum": ["READ_AUDIT", "READ_BENCHMARK", "READ_MASKED", "WRITE_UNMASK", "WRITE_EXECUTE", "SYSTEM"],
+      "description": "Required permission"
+    },
+    "input_schema": {
+      "$ref": "https://json-schema.org/draft-07/schema#",
+      "description": "JSON Schema for input validation"
+    },
+    "output_schema": {
+      "$ref": "https://json-schema.org/draft-07/schema#",
+      "description": "JSON Schema for output validation"
+    },
+    "side_effects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["audit_log.append", "database.write", "notification.send"]
+      },
+      "description": "Side effects of the tool"
+    },
+    "rate_limit": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Rate limit per minute"
+    },
+    "timeout": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Timeout in seconds"
+    }
+  },
+  "required": ["name", "permission_tag", "input_schema", "output_schema"]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mcp-tool-base",
+  "title": "MCP Tool Base Schema",
+  "description": "Base definitions shared across all MCP tool schemas.",
+  "definitions": {
+    "base_tool": {
+      "type": "object",
+      "properties": {
+        "tool_name": { "type": "string" },
+        "version": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tool_name"]
+    },
+    "pagination": {
+      "type": "object",
+      "properties": {
+        "page": { "type": "integer", "minimum": 1, "default": 1 },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+        "sort_by": { "type": "string" },
+        "sort_order": { "type": "string", "enum": ["asc", "desc"] }
+      }
+    },
+    "jurisdiction": {
+      "type": "object",
+      "properties": {
+        "jurisdiction_id": { "type": "string" },
+        "level": { "type": "string", "enum": ["federal", "state", "local", "agency"] }
+      },
+      "required": ["jurisdiction_id"]
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/explanation.json",
+  "title": "AI Explanation",
+  "description": "Grounded explanation from LLM",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Human-readable explanation"
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sentence_index": {"type": "integer"},
+          "evidence_id": {"type": "string"},
+          "policy_clause_id": {"type": "string"},
+          "quote": {"type": "string"}
+        }
+      },
+      "description": "Citations for grounding"
+    },
+    "grounding_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Percentage of grounded sentences"
+    },
+    "model_used": {
+      "type": "string",
+      "description": "LLM model used"
+    },
+    "tokens_used": {
+      "type": "integer",
+      "description": "Total tokens consumed"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["case_id", "rationale", "citations", "grounding_rate", "model_used", "created_at"]
+}

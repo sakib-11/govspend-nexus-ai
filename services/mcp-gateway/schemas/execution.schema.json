@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "execution",
+  "title": "Execution Tool Schema",
+  "input": {
+    "type": "object",
+    "properties": {
+      "case_id": { "type": "string", "minLength": 1 },
+      "action": {
+        "type": "string",
+        "enum": ["assign", "escalate", "close", "reject", "request_review"]
+      },
+      "reason": { "type": "string", "minLength": 1 },
+      "metadata": { "type": "object" }
+    },
+    "required": ["case_id", "action"]
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "case_id": { "type": "string" },
+      "action": { "type": "string" },
+      "status": { "type": "string" },
+      "result": { "type": "object" },
+      "timestamp": { "type": "string", "format": "date-time" },
+      "action_id": { "type": "string" }
+    }
+  }
+}

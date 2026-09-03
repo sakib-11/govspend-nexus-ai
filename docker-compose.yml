@@ -1,0 +1,219 @@
+services:
+  # ─── Data Stores ──────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: govspend
+      POSTGRES_USER: govspend
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-govspend}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U govspend"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── L0: Ingestion ────────────────────────────────────────────
+  ingestion-svc:
+    build:
+      context: .
+      dockerfile: services/ingestion-svc/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://govspend:govspend@postgres:5432/govspend
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── L1: Detection ────────────────────────────────────────────
+  detection-core:
+    build:
+      context: .
+      dockerfile: services/detection_core/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql://govspend:govspend@postgres:5432/govspend
+      REDIS_URL: redis://redis:6379
+      PORT: 8003
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  detection-svc:
+    build:
+      context: .
+      dockerfile: services/detection_svc/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://govspend:govspend@postgres:5432/govspend
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── L2: Scoring ──────────────────────────────────────────────
+  scoring-svc:
+    build:
+      context: .
+      dockerfile: services/scoring_svc/Dockerfile
+    ports:
+      - "8004:8004"
+    environment:
+      DATABASE_URL: postgresql://govspend:govspend@postgres:5432/govspend
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── L3: MCP Gateway ──────────────────────────────────────────
+  mcp-gateway:
+    build:
+      context: .
+      dockerfile: services/mcp-gateway/Dockerfile
+    ports:
+      - "8009:8009"
+    environment:
+      DATABASE_URL: postgresql://govspend:govspend@postgres:5432/govspend
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── L4: Explanation ──────────────────────────────────────────
+  explanation-svc:
+    build:
+      context: .
+      dockerfile: services/explanation-svc/Dockerfile
+    ports:
+      - "8006:8006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ─── Supporting Services ──────────────────────────────────────
+  ledger-svc:
+    build:
+      context: .
+      dockerfile: services/ledger-svc/Dockerfile
+    ports:
+      - "8009:8011"
+    environment:
+      LEDGER_ENC_KEY: ${LEDGER_ENC_KEY:-dev-ledger-key-32-bytes-pad!}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  unmask-svc:
+    build:
+      context: .
+      dockerfile: services/unmask-svc/Dockerfile
+    ports:
+      - "8010:8010"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  masked-evidence-svc:
+    build:
+      context: .
+      dockerfile: services/masked-evidence-svc/Dockerfile
+    ports:
+      - "8011:8011"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  digital-twin-svc:
+    build:
+      context: .
+      dockerfile: services/digital-twin-svc/Dockerfile
+    ports:
+      - "8007:8007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  audit-log-svc:
+    build:
+      context: .
+      dockerfile: services/audit-log-svc/Dockerfile
+    ports:
+      - "8012:8012"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  policy-weights-svc:
+    build:
+      context: .
+      dockerfile: services/policy_weights_svc/Dockerfile
+    ports:
+      - "8013:8007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  evidence-bundle-svc:
+    build:
+      context: .
+      dockerfile: services/evidence_bundle_svc/Dockerfile
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  event-publisher-svc:
+    build:
+      context: .
+      dockerfile: services/event-publisher-svc/Dockerfile
+    ports:
+      - "8014:8006"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ─── Identity ─────────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD:-admin}
+    ports:
+      - "8080:8080"
+    command: start-dev
+
+volumes:
+  postgres_data:

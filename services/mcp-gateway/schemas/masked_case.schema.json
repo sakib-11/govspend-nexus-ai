@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "masked-case",
+  "title": "Masked Case Tool Schema",
+  "input": {
+    "type": "object",
+    "properties": {
+      "case_id": { "type": "string", "minLength": 1 },
+      "include_evidence": { "type": "boolean", "default": false },
+      "include_comments": { "type": "boolean", "default": false }
+    },
+    "required": ["case_id"]
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "case_id": { "type": "string" },
+      "case_data": { "type": "object" },
+      "masking_level": { "type": "string", "enum": ["full", "partial", "minimal"] },
+      "viewable_fields": { "type": "array", "items": { "type": "string" } }
+    }
+  }
+}

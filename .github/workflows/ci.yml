@@ -1,0 +1,218 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          
+      - name: Install dependencies
+        run: poetry install --no-root
+        
+      - name: Run linting
+        run: |
+          poetry run ruff check .
+          poetry run black --check .
+          poetry run mypy .
+          
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install Node dependencies
+        run: npm install
+        
+      - name: Run ESLint
+        run: npm run lint || true
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: govspend_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          
+      - name: Install dependencies
+        run: poetry install --no-root
+        
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/govspend_test
+          REDIS_URL: redis://localhost:6379/0
+          ENVIRONMENT: test
+        run: |
+          poetry run pytest tests/unit tests/integration \
+            --cov=services \
+            --cov-report=xml \
+            --cov-report=html
+          
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  security:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          
+      - name: Install dependencies
+        run: poetry install --no-root
+        
+      - name: Run security tests
+        env:
+          ENVIRONMENT: test
+        run: |
+          poetry run pytest tests/security -v
+          
+      - name: Run Bandit security scan
+        run: |
+          poetry add --dev bandit
+          poetry run bandit -r services/ -f json -o bandit-report.json || true
+          
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha,format=short
+            
+      - name: Build and push all service images
+        run: |
+          for service in ingestion-svc detection-core scoring-svc mcp-gateway explanation-svc; do
+            docker buildx build \
+              --platform linux/amd64,linux/arm64 \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/$service:latest \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/$service:${{ github.sha }} \
+              --push \
+              -f services/$service/Dockerfile \
+              --cache-from type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/$service:buildcache \
+              --cache-to type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/$service:buildcache,mode=max \
+              .
+          done
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        
+      - name: Setup kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=./kubeconfig
+          
+      - name: Deploy to staging
+        run: |
+          cd infra/kubernetes
+          kubectl apply -f namespaces/
+          kubectl apply -f services/
+          kubectl rollout status deployment/ingestion-svc -n ingestion --timeout=300s
+          kubectl rollout status deployment/detection-core -n detection --timeout=300s
+          kubectl rollout status deployment/scoring-svc -n scoring --timeout=300s
+          
+      - name: Run smoke tests
+        run: |
+          kubectl run smoke-test --image=curlimages/curl --rm -it --restart=Never -- \
+            curl -f http://ingestion-svc.ingestion.svc.cluster.local:8000/health

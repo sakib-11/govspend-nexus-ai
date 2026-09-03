@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # ─── Data Stores ──────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: ${DB_NAME:-govspend}
+      POSTGRES_USER: ${DB_USER:-govspend}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-govspend}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U govspend"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Core Backend API & Gateway ───────────────────────────────
+  backend-api:
+    build:
+      context: .
+      dockerfile: services/backend-api/Dockerfile
+    ports:
+      - "8008:8008"
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-govspend}:${DB_PASSWORD:-govspend}@postgres:5432/${DB_NAME:-govspend}
+      REDIS_URL: redis://redis:6379/0
+      PORT: 8008
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  # ─── Frontend Production Application ─────────────────────────
+  frontend:
+    build:
+      context: ./govspend-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend-api
+    restart: always
+
+volumes:
+  postgres_prod_data:

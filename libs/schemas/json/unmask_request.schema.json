@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/unmask_request.json",
+  "title": "Unmask Request",
+  "description": "Request to de-tokenize sensitive data",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "requester_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "approver_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "entity_type": {
+      "type": "string",
+      "enum": ["vendor", "official", "department", "transaction"]
+    },
+    "entity_token": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected", "expired"]
+    },
+    "jurisdiction_scope": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "viewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["id", "case_id", "requester_id", "entity_type", "entity_token", "reason", "status", "created_at"]
+}

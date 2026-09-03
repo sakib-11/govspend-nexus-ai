@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/action.json",
+  "title": "Auditor Action",
+  "description": "Action taken by an auditor",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "auditor_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["approve", "reject", "recalibrate", "unmask", "escalate", "assign"]
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "weight_proposals": {
+          "type": "object",
+          "description": "Proposed weight changes for recalibrate action"
+        },
+        "assigned_to": {
+          "type": "string",
+          "description": "Auditor ID for assign action"
+        },
+        "unmask_request_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unmask request ID for unmask action"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["id", "case_id", "auditor_id", "action", "created_at"]
+}

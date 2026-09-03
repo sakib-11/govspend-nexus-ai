@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/case.json",
+  "title": "Audit Case",
+  "description": "An audit case for review",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "risk_score_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "in_review", "approved", "rejected", "escalated"]
+    },
+    "assigned_auditor_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jurisdiction_scope": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Priority level (1 = highest)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_notes": {
+      "type": "string"
+    }
+  },
+  "required": ["id", "risk_score_id", "status", "jurisdiction_scope", "created_at", "updated_at"]
+}

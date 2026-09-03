@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "invoice-evidence",
+  "title": "Invoice Evidence Tool Schema",
+  "input": {
+    "type": "object",
+    "properties": {
+      "transaction_id": { "type": "string", "minLength": 1 },
+      "include_items": { "type": "boolean", "default": true },
+      "mask_level": { "type": "string", "enum": ["full", "partial", "none"], "default": "partial" }
+    },
+    "required": ["transaction_id"]
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "transaction_id": { "type": "string" },
+      "invoice_evidence": {
+        "type": "object",
+        "properties": {
+          "invoice_number": { "type": "string" },
+          "invoice_date": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "vendor_name": { "type": "string" },
+          "vendor_id": { "type": "string" },
+          "items": { "type": "array" },
+          "status": { "type": "string" },
+          "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "masking_applied": { "type": "boolean" },
+      "data_quality": { "type": "object" }
+    }
+  }
+}

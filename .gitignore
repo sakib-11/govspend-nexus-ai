@@ -1,0 +1,141 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.pytype/
+
+# Linting
+.ruff_cache/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Docker
+docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!example.tfvars
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Backup files
+*.bak
+*.backup
+
+# Package lock files (for monorepo)
+package-lock.json
+
+# Test files in root
+test_*.py
+test_*.sh
+test_*.pdf
+test_*.txt
+create_*.py
+sample.*
+backup.sql
+deploy-production.sh
+verify_*.py
+locust_*.py
+run_*.py
+run_*.sh
+start_*.sh
+setup_*.sh
+comprehensive_*.sh
+get-docker.sh
+prometheus.yml
+
+# Status files
+*_STATUS.md
+*_SUMMARY.md
+*_VERIFICATION.md
+
+# Python cache in any directory
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Documentation build
+docs/_build/
+
+# Frontend build
+govspend-frontend/dist/
+govspend-frontend/build/

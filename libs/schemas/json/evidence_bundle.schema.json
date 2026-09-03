@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/evidence_bundle.json",
+  "title": "Evidence Bundle",
+  "description": "Complete evidence for a case",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "risk_score_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "$ref": "signal.schema.json"
+      }
+    },
+    "transaction": {
+      "$ref": "transaction.schema.json"
+    },
+    "vendor_token": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "benchmarks": {
+      "type": "object",
+      "properties": {
+        "price_deviation": {
+          "type": "object",
+          "properties": {
+            "peer_count": {"type": "integer"},
+            "upper_fence": {"type": "number"},
+            "q1": {"type": "number"},
+            "q3": {"type": "number"},
+            "iqr": {"type": "number"}
+          }
+        },
+        "vendor_graph": {
+          "type": "object",
+          "properties": {
+            "hhi": {"type": "number"},
+            "repeat_official_count": {"type": "integer"},
+            "total_edges": {"type": "integer"}
+          }
+        }
+      }
+    },
+    "retrieved_policy_chunks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chunk_id": {"type": "string"},
+          "content": {"type": "string"},
+          "source": {"type": "string"},
+          "relevance_score": {"type": "number"}
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["id", "risk_score_id", "signals", "transaction", "vendor_token", "department_id", "created_at"]
+}

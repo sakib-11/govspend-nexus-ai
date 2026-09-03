@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "benchmark-price",
+  "title": "Benchmark Price Tool Schema",
+  "input": {
+    "type": "object",
+    "properties": {
+      "category": { "type": "string", "minLength": 1 },
+      "region": { "type": "string", "minLength": 1 },
+      "quantity": { "type": "integer", "minimum": 1, "default": 1 },
+      "target_price": { "type": "number", "minimum": 0 }
+    },
+    "required": ["category", "region"]
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "category": { "type": "string" },
+      "region": { "type": "string" },
+      "benchmarks": { "type": "object" },
+      "recommendations": { "type": "object" },
+      "data_source": { "type": "string" },
+      "sample_size": { "type": "integer" }
+    }
+  }
+}

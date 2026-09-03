@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://govspend.auditcore.gov/schemas/risk_score.json",
+  "title": "Risk Score",
+  "description": "Computed risk score with tier",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "transaction_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Overall risk score"
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["high", "borderline", "low"],
+      "description": "Risk tier"
+    },
+    "confidence_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Combined confidence factor"
+    },
+    "policy_weight_version": {
+      "type": "string",
+      "description": "Version of policy weights used"
+    },
+    "evidence_bundle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["id", "transaction_id", "score", "tier", "confidence_factor", "created_at"],
+  "additionalProperties": false
+}
